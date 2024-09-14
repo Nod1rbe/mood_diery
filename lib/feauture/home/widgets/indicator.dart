@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 
-class SliderExample extends StatefulWidget {
+class CustomSlider extends StatefulWidget {
   bool enabled;
-  SliderExample({super.key, required this.enabled});
+  CustomSlider({super.key, required this.enabled});
 
   @override
-  _SliderExampleState createState() => _SliderExampleState();
+  _CustomSliderState createState() => _CustomSliderState();
 }
 
-class _SliderExampleState extends State<SliderExample> {
+class _CustomSliderState extends State<CustomSlider> {
   double _currentValue = 0.5;
 
   @override
