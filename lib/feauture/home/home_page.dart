@@ -1,10 +1,11 @@
-import 'dart:developer';
-
+import 'package:elingo/data/emotion.dart';
+import 'package:elingo/data/repository.dart';
 import 'package:elingo/feauture/calendar/calendar.dart';
 import 'package:elingo/feauture/home/widgets/custom_button.dart';
 import 'package:elingo/feauture/home/widgets/emotions_list.dart';
 import 'package:elingo/feauture/home/widgets/indicator.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -15,22 +16,15 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   bool selected = false;
-
-  int _receivedData = -2;
-
+  DateTime dateAndTime = DateTime.now();
+  late int imageIndex;
   void _handleDataChange(int newData) {
-    setState(() {
-      _receivedData = newData;
-    });
-  }
-
-  @override
-  void initState() {
-    _handleDataChange;
-    if (_receivedData > -1) {
-      selected = true;
+    imageIndex = newData;
+    if (newData > -1) {
+      setState(() {
+        selected = true;
+      });
     }
-    super.initState();
   }
 
   @override
@@ -48,23 +42,25 @@ class _HomePageState extends State<HomePage> {
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
                       const SizedBox(),
-                      const Text(
-                        '1-january 09:00',
-                        style: TextStyle(
+                      Text(
+                        '${dateAndTime.day} ${monthNumberToWord(dateAndTime.month)} ${dateAndTime.hour}:${dateAndTime.minute}',
+                        style: const TextStyle(
                             color: Color(0xFFBCBCBF),
                             fontWeight: FontWeight.w700,
                             fontSize: 18),
                       ),
                       IconButton(
-                          onPressed: () {
-                            setState(() {
-                              Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        YearlyCalendarScreen(),
-                                  ));
-                            });
+                          onPressed: () async {
+                            final result = await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const CustomCalendar(),
+                                ));
+                            if (result != null) {
+                              setState(() {
+                                dateAndTime = result;
+                              });
+                            }
                           },
                           icon: const Icon(
                             Icons.calendar_month_outlined,
@@ -92,7 +88,7 @@ class _HomePageState extends State<HomePage> {
                       fontWeight: FontWeight.w800,
                     ),
                   ),
-                  SliderExample(enabled: selected),
+                  CustomSlider(enabled: selected),
                   const Text(
                     'Самооценка',
                     style: TextStyle(
@@ -101,7 +97,7 @@ class _HomePageState extends State<HomePage> {
                       fontWeight: FontWeight.w800,
                     ),
                   ),
-                  SliderExample(enabled: selected),
+                  CustomSlider(enabled: selected),
                   const Text(
                     'Заметки',
                     style: TextStyle(
@@ -138,15 +134,18 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                   GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        log(_receivedData.toString());
-                      });
+                    onTap: () async {
+                      var preferences = await SharedPreferences.getInstance();
+                      Repository(preferences).saveEmotion(
+                        '15.12.2024',
+                        Emotion(imageIndex, 1, 2, 'note'),
+                      );
+                      var value = await Repository(preferences)
+                          .getEmotions('15.12.2024');
                       showDialog(
-                        context: context,
                         builder: (BuildContext context) {
                           return AlertDialog(
-                            title: Text('все ок'),
+                            title: Text(value.toString()),
                             actions: [
                               TextButton(
                                 onPressed: () {
@@ -157,6 +156,7 @@ class _HomePageState extends State<HomePage> {
                             ],
                           );
                         },
+                        context: context,
                       );
                     },
                     child: Container(
@@ -185,5 +185,36 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
     );
+  }
+
+  String monthNumberToWord(int monthNumber) {
+    switch (monthNumber) {
+      case 1:
+        return 'января';
+      case 2:
+        return 'февраля';
+      case 3:
+        return 'марта';
+      case 4:
+        return 'апреля';
+      case 5:
+        return 'мая';
+      case 6:
+        return 'июня';
+      case 7:
+        return 'июля';
+      case 8:
+        return 'августа';
+      case 9:
+        return 'сентября';
+      case 10:
+        return 'октября';
+      case 11:
+        return 'ноября';
+      case 12:
+        return 'декабря';
+      default:
+        return 'Неизвестный месяц'; // Agar 1-12 raqami kiritilmasa
+    }
   }
 }
